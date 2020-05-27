@@ -19,9 +19,6 @@ Tx_Enable = LED(18)
 #E $Data(BYTE[1]) $CheckSum16(BYTE[2]) $END;
 
 
-#Inverter 1: b'7f' b'df' b'eb' b'ff' b'df' b'5d' b'77' b'00' b'' b''
-#Inverter 2: b'bf' b'df' b'eb' b'ff' b'df' b'5d' b'11' b'00' b'' b''
-
 # 9600, 8 bit, 1 stop bit (checksum passer med MODBUS checksum)
 #2020-05-22 22:53:17.435546: b'01'b'04'b'00'b'0a'b'00'b'10'b'd1'b'c4'.
 #values1 = bytearray ([0x01, 0x04, 0x00, 0x0a, 0x00, 0x10, 0xd1, 0xc4])
@@ -59,9 +56,11 @@ def write_txt(txt,len_return):
 #        print(local_msg)
 #        print(len(local_msg))
         """
-        Here we should check for valid checksum
+        Now we have a new string. The way we ensure that it's valid is by doing a crc16 check 
+        If the return value is zero, the the string i valid at we can return it. If not we try again.
+        After 5 wrong (or missing) result we return and try the other inverter.
+
         Modbus function expect an array of bytes and not a bytearry
-        My function needs to be adjusted to use array of bytes before the check can be implemented
         """
         
         if libscrc.modbus(local_msg,0xFFFF)==0: # Validate checksum
