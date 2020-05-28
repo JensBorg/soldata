@@ -19,6 +19,9 @@ Tx_Enable = LED(18)
 #E $Data(BYTE[1]) $CheckSum16(BYTE[2]) $END;
 
 
+#Inverter 1: b'7f' b'df' b'eb' b'ff' b'df' b'5d' b'77' b'00' b'' b''
+#Inverter 2: b'bf' b'df' b'eb' b'ff' b'df' b'5d' b'11' b'00' b'' b''
+
 # 9600, 8 bit, 1 stop bit (checksum passer med MODBUS checksum)
 #2020-05-22 22:53:17.435546: b'01'b'04'b'00'b'0a'b'00'b'10'b'd1'b'c4'.
 #values1 = bytearray ([0x01, 0x04, 0x00, 0x0a, 0x00, 0x10, 0xd1, 0xc4])
@@ -47,20 +50,20 @@ def write_txt(txt,len_return):
     count=0
     while 1:
         Tx_Enable.on()
+#        time.sleep(0.06)
         ser.write(txt)
         ser.flush()
         Tx_Enable.off()
-        time.sleep(0.06)
-        local_msg=ser.read(50)
+#        time.sleep(0.08)
+        
+        local_msg=ser.read(80)
 #        print('Checksum: ',libscrc.modbus(local_msg,0xFFFF),' - ',end='')
 #        print(local_msg)
 #        print(len(local_msg))
         """
-        Now we have a new string. The way we ensure that it's valid is by doing a crc16 check 
-        If the return value is zero, the the string i valid at we can return it. If not we try again.
-        After 5 wrong (or missing) result we return and try the other inverter.
-
+        Here we should check for valid checksum
         Modbus function expect an array of bytes and not a bytearry
+        My function needs to be adjusted to use array of bytes before the check can be implemented
         """
         
         if libscrc.modbus(local_msg,0xFFFF)==0: # Validate checksum
@@ -68,11 +71,12 @@ def write_txt(txt,len_return):
         count=count+1
         if count>5:
             return b''
-        time.sleep(0.01)
         ser.close()
+        time.sleep(0.1)
         ser.open()
         ser.reset_input_buffer()
         ser.reset_output_buffer()
+        time.sleep(0.08)
 #    EndTime=datetime.datetime.now()
 #    TimeUsed=EndTime-StartTime
 #    print("Time Used ", TimeUsed.microseconds/1000, " ms")
@@ -94,14 +98,14 @@ with serial.rs485.RS485('/dev/ttyAMA0', 9600, bytesize=8, parity='N', stopbits=1
     ser.reset_input_buffer()
     ser.reset_output_buffer()
     time.sleep(0.1)
-    for x in range(1, 1000):
+    while 1:
         for y in (1,2):
             if y==1:
                 msg=write_txt(values1,39)
             else:
                 msg=write_txt(values2,39)
             i=len(msg)
-            if i==39:
+            if i>34:
                 txt="Inverter " + format(y) + ", "
                 print("Inverter",y," ",end='')
                 txt=txt + "Date " + format(datetime.datetime.now()) + ", "
@@ -137,6 +141,6 @@ with serial.rs485.RS485('/dev/ttyAMA0', 9600, bytesize=8, parity='N', stopbits=1
                 print("Kwatt total",to_value(msg,31,4,10))
                 txt=txt + "\n"
                 f.write(txt)
-            time.sleep(0.1)
+            time.sleep(0.2)
         time.sleep(10)
   
