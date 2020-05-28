@@ -1,0 +1,14 @@
+[Unit]
+Description=Read data from klne inverter service
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 -u read_serial_panel.py
+WorkingDirectory=/home/pi/project/soldata
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=pi
+
+[Install]
+WantedBy=multi-user.target
