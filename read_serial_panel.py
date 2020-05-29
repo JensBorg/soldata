@@ -8,6 +8,7 @@ import datetime
 import os 
 from gpiozero import LED
 import libscrc # CRC16 check
+from pathlib import Path
 
 Tx_Enable = LED(18)
 
@@ -36,6 +37,14 @@ values21 = bytearray ([0x02, 0x04, 0x00, 0x1e, 0x00, 0x0a, 0x10, 0x38])
 #b'01'b'04'b'20'b'0a'b'3a'b'00'b'00'b'00'b'04'b'00'b'00'b'09'b'27'b'00'b'00'b'00'b'00'b'00'b'04'b'00'b'00'b'00'b'00'b'13'b'86'b'00'b'00'b'04'b'34'b'00'b'78'b'00'b'03'b'21'b'64'b'83'b'15'
 #send b'02'b'04'b'00'b'0a'b'00'b'10'b'd1'b'f7'.
 
+def get_filename():
+    soldir="/data/soldata/"
+    solext=".txt"
+    #home = str(Path.home())
+    home="/home/pi"
+    now = datetime.datetime.now()
+    filedate=now.strftime("%Y-%m-%d")
+    return home+soldir+filedate+solext
 
 def write_txt(txt,len_return):
 #    StartTime=datetime.datetime.now()
@@ -82,7 +91,6 @@ def to_value(local_msg,startbyte,length,base):
     return local_value/base
     
 bufsize = 1
-f = open("soldata.txt", "a", buffering=bufsize)
 msg=bytearray()
 #serial.close()
 with serial.rs485.RS485('/dev/ttyAMA0', 9600, bytesize=8, parity='N', stopbits=1, timeout=0.1) as ser:
@@ -92,6 +100,8 @@ with serial.rs485.RS485('/dev/ttyAMA0', 9600, bytesize=8, parity='N', stopbits=1
     ser.reset_output_buffer()
     time.sleep(0.1)
     while 1:
+        filename=get_filename()
+        f = open(filename, "a+", buffering=bufsize)
         for y in (1,2):
             if y==1:
                 msg=write_txt(values1,39)
@@ -130,4 +140,4 @@ with serial.rs485.RS485('/dev/ttyAMA0', 9600, bytesize=8, parity='N', stopbits=1
                 f.write(txt)
             time.sleep(0.2)
         time.sleep(10)
-  
+        f.close()
