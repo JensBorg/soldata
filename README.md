@@ -4,7 +4,7 @@ The program is now running as a service and writes data to a file every 10 secon
 The current format of the file is commaseparated including some text to explain the value
 
 ToDo
-* Change the file format to JSON
+* ~~Change the file format to JSON~~ - done
 * Publish the data to a NATS service
 * Performance optimization. Currently the file is open and closed for each roundtrip. 
   This should be changed to keep the file open until the data changes.
