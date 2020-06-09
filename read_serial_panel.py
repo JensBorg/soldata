@@ -68,6 +68,7 @@ def GetDataFromInverter(txt,len_return):
         Tx_Enable.off()
 #        time.sleep(0.08)
         
+        local_msg=b''
         local_msg=ser.read(80)
 #        print('Checksum: ',libscrc.modbus(local_msg,0xFFFF),' - ',end='')
 #        print(local_msg)
@@ -110,6 +111,7 @@ with serial.rs485.RS485('/dev/ttyAMA0', 9600, bytesize=8, parity='N', stopbits=1
     ser.reset_output_buffer()
     time.sleep(0.1)
     while 1:
+        got_data=False
         inv = {}
         inv['date'] = datetime.datetime.now()
         inv['inverters'] = []
@@ -125,8 +127,10 @@ with serial.rs485.RS485('/dev/ttyAMA0', 9600, bytesize=8, parity='N', stopbits=1
                 msg=GetDataFromInverter(values2,39)
             i=len(msg)
             if i>34:
+                got_data=True
                 txt="Inverter " + format(y) + ", "
                 print("Inverter",y," ",end='')
+                print("Length msg: ",len(msg)," ",end='')
                 txt=txt + "Date " + format(datetime.datetime.now()) + ", "
                 print(datetime.datetime.now(), " ",end='')
 #                print("0+1: ", msg[0], " - ", msg[1], " - ", (msg[0]*256+msg[1])/10, "")
@@ -169,10 +173,11 @@ with serial.rs485.RS485('/dev/ttyAMA0', 9600, bytesize=8, parity='N', stopbits=1
 
             time.sleep(0.2)
         f.close()
-        filename=get_jsonfilename()
-        f = open(filename, "a+", buffering=bufsize,newline='\n')
-        f.write(json.dumps(inv, cls=DateTimeEncoder))
-        f.write("\n")
-        f.close()
+        if (got_data):
+            filename=get_jsonfilename()
+            f = open(filename, "a+", buffering=bufsize,newline='\n')
+            f.write(json.dumps(inv, cls=DateTimeEncoder))
+            f.write("\n")
+            f.close()
         time.sleep(10)
         
