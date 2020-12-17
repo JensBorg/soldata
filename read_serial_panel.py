@@ -11,6 +11,10 @@ import libscrc # CRC16 check
 from pathlib import Path
 import json
 from json import JSONEncoder
+import paho.mqtt.client as mqtt #import the client1
+import paho.mqtt.publish as publish
+import json
+
 
 Tx_Enable = LED(18)
 
@@ -30,6 +34,11 @@ values11 = bytearray ([0x01, 0x04, 0x00, 0x1e, 0x00, 0x0a, 0x10, 0x0b])
 #2020-05-22 22:53:13.385091: b'02'b'04'b'00'b'0a'b'00'b'10'b'd1'b'f7'.
 values2 = (b'\x02\x04\x00\x0a\x00\x10\xd1\xf7')
 values21 = bytearray ([0x02, 0x04, 0x00, 0x1e, 0x00, 0x0a, 0x10, 0x38])
+
+# MQTT settings (should be read from configuration file
+broker_address="192.168.0.168" 
+username="mqtt"
+password="mqtt"
 
 # subclass JSONEncoder
 class DateTimeEncoder(JSONEncoder):
@@ -100,6 +109,16 @@ def to_value(local_msg,startbyte,length,base):
     for i in range(length):
         local_value=local_value*256+local_msg[startbyte+i]
     return local_value/base
+
+def SendToMQTT(l_inv,l_power,l_energy):
+    inv={}
+    inv["power"]=l_power
+    inv["energy"]=l_energy
+    destination='home-assistant/solar/inverter' + format(l_inv)
+    publish.single(destination, payload=json.dumps(inv), 
+        hostname=broker_address, auth={'username':username, 'password':password})
+    return 
+
     
 bufsize = 1
 msg=bytearray()
@@ -170,6 +189,7 @@ with serial.rs485.RS485('/dev/ttyAMA0', 9600, bytesize=8, parity='N', stopbits=1
                 txt=txt + "\n"
                 f.write(txt)
                 inv['inverters'].append(InvData)
+                SendToMQTT(y,InvData['AC Power'],InvData['Energy Today'])
 
             time.sleep(0.2)
         f.close()
