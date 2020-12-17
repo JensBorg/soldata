@@ -8,7 +8,7 @@ Now it also sends data to MQTT via publisg.single. Currently only AC Power and E
 
 ToDo
 * ~~Change the file format to JSON~~ - done
-* Decided to send data via MQTT - done
+* ~~Decided to send data via MQTT~~ - done
 * MQTT is already used in HA for Zigbee communication
 * Configuration of the MQTT endpoint is hardcoded. It should be moved to an configuration file.
 * Energy of the day should send a zero value when passing midnigt
